@@ -13,6 +13,7 @@ export default function NewPracticePage() {
   const [team, setTeam] = useState<Team | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [hasDefaultLocation, setHasDefaultLocation] = useState(false);
 
   // Form fields
   const [title, setTitle] = useState('אימון');
@@ -41,6 +42,7 @@ export default function NewPracticePage() {
     setTeam(teamData);
     if ((teamData as Team & { default_location?: string | null }).default_location) {
       setLocation((teamData as Team & { default_location?: string | null }).default_location!);
+      setHasDefaultLocation(true);
     }
     setLoading(false);
   }
@@ -106,8 +108,14 @@ export default function NewPracticePage() {
 
   if (loading || !team) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-400">טוען...</p>
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <svg className="h-8 w-8 animate-spin text-slate-300" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <p className="text-sm font-medium text-slate-400">טוען...</p>
+        </div>
       </div>
     );
   }
@@ -116,99 +124,122 @@ export default function NewPracticePage() {
 
   return (
     <div
-      className="min-h-screen bg-gray-50 pb-8"
+      className="min-h-screen bg-slate-50 pb-12"
       style={{ '--team-primary': color } as React.CSSProperties}
     >
       {/* Header */}
-      <div className="px-4 py-6 text-white" style={{ backgroundColor: color }}>
-        <button
-          onClick={() => router.push(`/teams/${teamId}`)}
-          className="text-white/80 text-sm mb-2"
-        >
-          &rarr; חזרה לקבוצה
-        </button>
-        <h1 className="text-2xl font-bold">אימון חדש</h1>
-        <p className="text-white/80 text-sm mt-1">{team.name}</p>
+      <div
+        className="relative px-4 pb-10 pt-6 text-white"
+        style={{ backgroundColor: color }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/5 to-black/15" />
+        <div className="relative mx-auto max-w-lg">
+          <button
+            onClick={() => router.push(`/teams/${teamId}`)}
+            className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-all duration-200 hover:bg-white/25 active:scale-[0.97]"
+          >
+            <svg className="h-3.5 w-3.5 rotate-180" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+            </svg>
+            חזרה לקבוצה
+          </button>
+          <h1 className="text-2xl font-extrabold tracking-tight">אימון חדש</h1>
+          <p className="mt-1 text-sm font-medium text-white/80">{team.name}</p>
+        </div>
       </div>
 
-      <div className="px-4 mt-6 max-w-lg mx-auto">
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-5 space-y-5">
+      <div className="mx-auto max-w-lg px-4">
+        <form onSubmit={handleSubmit} className="card -mt-6 animate-fade-in-up p-6 space-y-5">
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">כותרת</label>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">כותרת</label>
             <input
               type="text"
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
-              style={{ '--tw-ring-color': color } as React.CSSProperties}
+              className="input"
             />
           </div>
 
           {/* Date */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">תאריך</label>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">תאריך</label>
             <input
               type="date"
               required
               value={practiceDate}
               onChange={(e) => setPracticeDate(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
-              style={{ '--tw-ring-color': color } as React.CSSProperties}
+              className="input"
               dir="ltr"
             />
           </div>
 
-          {/* Start Time */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">שעת התחלה</label>
-            <input
-              type="time"
-              required
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
-              style={{ '--tw-ring-color': color } as React.CSSProperties}
-              dir="ltr"
-            />
-          </div>
-
-          {/* End Time */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">שעת סיום (אופציונלי)</label>
-            <input
-              type="time"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
-              style={{ '--tw-ring-color': color } as React.CSSProperties}
-              dir="ltr"
-            />
+          {/* Time Row */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700">שעת התחלה</label>
+              <input
+                type="time"
+                required
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="input"
+                dir="ltr"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                שעת סיום
+                <span className="mr-1 text-xs font-normal text-slate-400">(אופציונלי)</span>
+              </label>
+              <input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="input"
+                dir="ltr"
+              />
+            </div>
           </div>
 
           {/* Location */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">מיקום (אופציונלי)</label>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="לדוגמה: אולם הספורט העירוני"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
-              style={{ '--tw-ring-color': color } as React.CSSProperties}
-            />
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+              מיקום
+              <span className="mr-1 text-xs font-normal text-slate-400">(אופציונלי)</span>
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => {
+                  setLocation(e.target.value);
+                  setHasDefaultLocation(false);
+                }}
+                placeholder="לדוגמה: אולם הספורט העירוני"
+                className="input"
+              />
+              {hasDefaultLocation && location && (
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 badge badge-success text-[10px]">
+                  ברירת מחדל
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">הערות (אופציונלי)</label>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+              הערות
+              <span className="mr-1 text-xs font-normal text-slate-400">(אופציונלי)</span>
+            </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 resize-none"
-              style={{ '--tw-ring-color': color } as React.CSSProperties}
+              placeholder="הוסף הערות לשחקנים..."
+              className="input resize-none"
             />
           </div>
 
@@ -216,10 +247,24 @@ export default function NewPracticePage() {
           <button
             type="submit"
             disabled={saving || !title.trim() || !practiceDate || !startTime}
-            className="w-full py-3 rounded-xl text-white font-medium disabled:opacity-50"
-            style={{ backgroundColor: color }}
+            className="btn btn-primary w-full py-3.5 text-base font-bold"
           >
-            {saving ? 'יוצר אימון...' : 'צור אימון'}
+            {saving ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="btn-spinner h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                יוצר אימון...
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                צור אימון
+              </span>
+            )}
           </button>
         </form>
       </div>

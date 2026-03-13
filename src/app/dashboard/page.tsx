@@ -25,66 +25,98 @@ export default async function DashboardPage() {
     .returns<Team[]>();
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       {/* Header */}
-      <header className="bg-white border-b border-gray-100 px-4 py-4">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200/60 px-4 py-5 sticky top-0 z-10">
         <div className="max-w-lg mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-bold">שלום, {coach.full_name} 👋</h1>
-            <p className="text-xs text-gray-500">הקבוצות שלך</p>
+            <h1 className="text-xl font-bold text-gray-900">שלום, {coach.full_name}</h1>
+            <p className="text-sm text-gray-500 mt-0.5">הקבוצות שלך</p>
           </div>
-          <div className="text-2xl">🏀</div>
+          <div className="w-11 h-11 rounded-full bg-gray-900 flex items-center justify-center shadow-sm">
+            <span className="text-lg">🏀</span>
+          </div>
         </div>
       </header>
 
       {/* Content */}
-      <main className="max-w-lg mx-auto px-4 py-6">
+      <main className="max-w-lg mx-auto px-4 py-6 pb-28">
         {teams && teams.length > 0 ? (
           <div className="space-y-3">
-            {teams.map((team) => (
+            {teams.map((team, index) => (
               <Link
                 key={team.id}
                 href={`/teams/${team.id}`}
-                className="block bg-white rounded-2xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow"
-                style={{ '--team-primary': team.theme_color_hex } as React.CSSProperties}
+                className="group block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md active:scale-[0.97] transition-all duration-200"
+                style={{
+                  '--team-primary': team.theme_color_hex,
+                  animationDelay: `${index * 60}ms`,
+                } as React.CSSProperties}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center">
+                  {/* Colored left border */}
                   <div
-                    className="w-4 h-4 rounded-full shrink-0"
+                    className="w-1 self-stretch rounded-r-full"
                     style={{ backgroundColor: team.theme_color_hex }}
                   />
-                  <div className="min-w-0">
-                    <h2 className="font-semibold text-base truncate">{team.name}</h2>
-                    <p className="text-sm text-gray-500">{team.age_group}</p>
+                  <div className="flex items-center gap-3 px-4 py-4 flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
+                      <h2 className="font-bold text-base text-gray-900 truncate">{team.name}</h2>
+                      <p className="text-sm text-gray-500 mt-0.5">{team.age_group}</p>
+                    </div>
+                    {/* Chevron */}
+                    <svg
+                      className="w-5 h-5 text-gray-300 group-hover:text-gray-500 transition-colors duration-200 rotate-180 shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
                   </div>
-                  <svg
-                    className="w-5 h-5 text-gray-300 mr-auto rotate-180"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
                 </div>
               </Link>
             ))}
           </div>
         ) : (
-          <div className="text-center py-16">
-            <div className="text-5xl mb-4">🏀</div>
-            <h2 className="text-lg font-semibold text-gray-700 mb-2">אין קבוצות עדיין</h2>
-            <p className="text-sm text-gray-500 mb-6">צור את הקבוצה הראשונה שלך</p>
+          <div className="text-center py-20 animate-[fadeIn_0.4s_ease-out]">
+            <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-5">
+              <span className="text-4xl">🏀</span>
+            </div>
+            <h2 className="text-lg font-bold text-gray-800 mb-2">אין קבוצות עדיין</h2>
+            <p className="text-sm text-gray-500 mb-8 leading-relaxed">
+              צור את הקבוצה הראשונה שלך<br />ותתחיל לנהל אימונים ונוכחות
+            </p>
+            <Link
+              href="/dashboard/new-team"
+              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gray-900 text-white font-semibold text-sm shadow-lg hover:bg-gray-800 active:scale-[0.97] transition-all duration-200"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              קבוצה חדשה
+            </Link>
           </div>
         )}
-
-        <Link
-          href="/dashboard/new-team"
-          className="mt-6 block w-full text-center py-3 rounded-xl bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 transition-colors"
-        >
-          + קבוצה חדשה
-        </Link>
       </main>
+
+      {/* Floating Action Button */}
+      {teams && teams.length > 0 && (
+        <div className="fixed bottom-6 left-0 right-0 px-4 z-20">
+          <div className="max-w-lg mx-auto">
+            <Link
+              href="/dashboard/new-team"
+              className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-gray-900 text-white font-semibold text-sm shadow-lg hover:bg-gray-800 active:scale-[0.97] transition-all duration-200"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              קבוצה חדשה
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

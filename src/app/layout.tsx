@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
+import { Heebo } from "next/font/google";
 import "./globals.css";
 
+const heebo = Heebo({
+  subsets: ["hebrew", "latin"],
+  variable: "--font-heebo",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Coachy - ניהול נוכחות לאימונים",
-  description: "כלי פשוט למאמנים לאיסוף אישורי הגעה לאימונים",
+  title: "Coachy",
+  description: "ניהול נוכחות לאימונים",
 };
 
 export default function RootLayout({
@@ -13,7 +20,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="he" dir="rtl">
-      <body className="antialiased bg-gray-50 text-gray-900 min-h-screen">
+      <body
+        className={`${heebo.className} antialiased bg-[#f8f9fb] text-gray-900 min-h-screen`}
+      >
         {children}
       </body>
     </html>
