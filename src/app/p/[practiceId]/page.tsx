@@ -495,8 +495,6 @@ export default function PublicPracticePage({
 
               <div className="flex flex-col gap-2">
                 {players.map((player, index) => {
-                  const inv = invitations.find((i) => i.player_id === player.id);
-                  const responded = inv && inv.response_status !== 'no_response';
                   const delayClass =
                     index < 5
                       ? `delay-${index + 1}`
@@ -508,11 +506,6 @@ export default function PublicPracticePage({
                       key={player.id}
                       onClick={() => handleSelectPlayer(player)}
                       className={`animate-slide-in ${delayClass} group flex items-center gap-3 rounded-xl border-2 border-slate-100 bg-slate-50/50 px-4 py-3.5 text-right transition-all duration-200 hover:border-slate-200 hover:bg-white hover:shadow-md active:scale-[0.97] active:shadow-sm`}
-                      style={
-                        {
-                          '--hover-border': teamColor,
-                        } as React.CSSProperties
-                      }
                     >
                       {/* Jersey badge */}
                       <span
@@ -526,13 +519,9 @@ export default function PublicPracticePage({
                       <span className="flex-1 text-base font-semibold text-slate-800">
                         {player.full_name}
                       </span>
-                      {responded && (
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-xs">
-                          {inv.response_status === 'yes' && '\u2705'}
-                          {inv.response_status === 'no' && '\u274C'}
-                          {inv.response_status === 'maybe' && '\uD83E\uDD14'}
-                        </span>
-                      )}
+                      <svg className="h-4 w-4 text-slate-300 rotate-180 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
                     </button>
                   );
                 })}
