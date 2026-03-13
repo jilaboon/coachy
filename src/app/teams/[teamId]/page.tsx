@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase-server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import type { Team, Player, Practice } from '@/types/database';
+import PracticeCard from './PracticeCard';
 
 export default async function TeamPage({ params }: { params: Promise<{ teamId: string }> }) {
   const { teamId } = await params;
@@ -128,54 +129,12 @@ export default async function TeamPage({ params }: { params: Promise<{ teamId: s
           {upcomingPractices && upcomingPractices.length > 0 ? (
             <div className="space-y-3">
               {upcomingPractices.map((practice, index) => (
-                <Link
+                <PracticeCard
                   key={practice.id}
-                  href={`/practices/${practice.id}`}
-                  className="group block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md active:scale-[0.98] transition-all duration-200"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <div className="flex">
-                    {/* Team color accent */}
-                    <div
-                      className="w-1 self-stretch"
-                      style={{ backgroundColor: team.theme_color_hex }}
-                    />
-                    <div className="flex-1 p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-gray-900">{practice.title}</p>
-                          <p className="text-sm text-gray-500 mt-1">
-                            {new Date(practice.practice_date).toLocaleDateString('he-IL', {
-                              weekday: 'long',
-                              day: 'numeric',
-                              month: 'long',
-                            })}
-                          </p>
-                          <div className="flex items-center gap-3 mt-2">
-                            <span className="inline-flex items-center gap-1 text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
-                              🕐 {practice.start_time.slice(0, 5)}
-                              {practice.end_time ? ` - ${practice.end_time.slice(0, 5)}` : ''}
-                            </span>
-                            {practice.location && (
-                              <span className="inline-flex items-center gap-1 text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md truncate">
-                                📍 {practice.location}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <svg
-                          className="w-5 h-5 text-gray-300 group-hover:text-gray-500 transition-colors duration-200 rotate-180 shrink-0 mt-1"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
+                  practice={practice}
+                  teamColor={team.theme_color_hex}
+                  index={index}
+                />
               ))}
             </div>
           ) : (
