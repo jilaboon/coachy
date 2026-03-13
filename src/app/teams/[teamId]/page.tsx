@@ -115,56 +115,6 @@ export default async function TeamPage({ params }: { params: Promise<{ teamId: s
           </Link>
         </div>
 
-        {/* Players Section */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-gray-900">שחקנים</h2>
-            <span
-              className="text-xs font-semibold px-2.5 py-1 rounded-full text-white"
-              style={{ backgroundColor: team.theme_color_hex }}
-            >
-              {players?.length || 0}
-            </span>
-          </div>
-          {players && players.length > 0 ? (
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              {players.map((player, index) => (
-                <div
-                  key={player.id}
-                  className={`flex items-center gap-3 px-4 py-3.5 transition-colors duration-150 ${
-                    index % 2 === 1 ? 'bg-gray-50/50' : ''
-                  } ${index < players.length - 1 ? 'border-b border-gray-100' : ''}`}
-                >
-                  <span
-                    className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-sm font-bold shrink-0 shadow-sm"
-                    style={{ backgroundColor: team.theme_color_hex }}
-                  >
-                    {player.jersey_number ?? '-'}
-                  </span>
-                  <span className="font-medium text-gray-900">{player.full_name}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
-              <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                <span className="text-2xl">👥</span>
-              </div>
-              <p className="text-sm text-gray-400 mb-4">אין שחקנים עדיין</p>
-              <Link
-                href={`/teams/${teamId}/players`}
-                className="inline-flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-lg active:scale-[0.97] transition-all duration-200"
-                style={{ color: team.theme_color_hex }}
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                הוסף את השחקן הראשון
-              </Link>
-            </div>
-          )}
-        </section>
-
         {/* Upcoming Practices */}
         <section>
           <div className="flex items-center justify-between mb-3">
@@ -243,6 +193,56 @@ export default async function TeamPage({ params }: { params: Promise<{ teamId: s
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
                 צור אימון חדש
+              </Link>
+            </div>
+          )}
+        </section>
+
+        {/* Players Section */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-bold text-gray-900">שחקנים</h2>
+            <span
+              className="text-xs font-semibold px-2.5 py-1 rounded-full text-white"
+              style={{ backgroundColor: team.theme_color_hex }}
+            >
+              {players?.length || 0}
+            </span>
+          </div>
+          {players && players.length > 0 ? (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              {players.map((player, index) => (
+                <div
+                  key={player.id}
+                  className={`flex items-center gap-3 px-4 py-3.5 transition-colors duration-150 ${
+                    index % 2 === 1 ? 'bg-gray-50/50' : ''
+                  } ${index < players.length - 1 ? 'border-b border-gray-100' : ''}`}
+                >
+                  <span
+                    className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-sm font-bold shrink-0 shadow-sm"
+                    style={{ backgroundColor: team.theme_color_hex }}
+                  >
+                    {player.jersey_number ?? '-'}
+                  </span>
+                  <span className="font-medium text-gray-900">{player.full_name}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+              <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                <span className="text-2xl">👥</span>
+              </div>
+              <p className="text-sm text-gray-400 mb-4">אין שחקנים עדיין</p>
+              <Link
+                href={`/teams/${teamId}/players`}
+                className="inline-flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-lg active:scale-[0.97] transition-all duration-200"
+                style={{ color: team.theme_color_hex }}
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                הוסף את השחקן הראשון
               </Link>
             </div>
           )}
