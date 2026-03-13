@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import type { Coach, Team } from '@/types/database';
+import TeamCard from './TeamCard';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -44,52 +45,7 @@ export default async function DashboardPage() {
         {teams && teams.length > 0 ? (
           <div className="space-y-3">
             {teams.map((team, index) => (
-              <Link
-                key={team.id}
-                href={`/teams/${team.id}`}
-                className="group block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md active:scale-[0.97] transition-all duration-200"
-                style={{
-                  '--team-primary': team.theme_color_hex,
-                  animationDelay: `${index * 60}ms`,
-                } as React.CSSProperties}
-              >
-                <div className="flex items-center">
-                  {/* Colored left border */}
-                  <div
-                    className="w-1 self-stretch rounded-r-full"
-                    style={{ backgroundColor: team.theme_color_hex }}
-                  />
-                  <div className="flex items-center gap-3 px-4 py-4 flex-1 min-w-0">
-                    {/* Team logo or fallback */}
-                    {team.logo_url ? (
-                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-gray-50 shrink-0 border border-gray-100">
-                        <img src={team.logo_url} alt={team.name} className="w-full h-full object-contain" />
-                      </div>
-                    ) : (
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-lg shrink-0 shadow-sm"
-                        style={{ backgroundColor: team.theme_color_hex }}
-                      >
-                        🏀
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <h2 className="font-bold text-base text-gray-900 truncate">{team.name}</h2>
-                      <p className="text-sm text-gray-500 mt-0.5">{team.age_group}</p>
-                    </div>
-                    {/* Chevron */}
-                    <svg
-                      className="w-5 h-5 text-gray-300 group-hover:text-gray-500 transition-colors duration-200 rotate-180 shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
-              </Link>
+              <TeamCard key={team.id} team={team} index={index} />
             ))}
           </div>
         ) : (
