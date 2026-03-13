@@ -11,6 +11,7 @@ export default function NewTeamPage() {
   const [name, setName] = useState('');
   const [ageGroup, setAgeGroup] = useState('');
   const [selectedColor, setSelectedColor] = useState<number>(0);
+  const [defaultLocation, setDefaultLocation] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -48,6 +49,7 @@ export default function NewTeamPage() {
         age_group: ageGroup.trim(),
         theme_color_name: color.name,
         theme_color_hex: color.hex,
+        default_location: defaultLocation.trim() || null,
       })
       .select('id')
       .single();
@@ -132,6 +134,21 @@ export default function NewTeamPage() {
             <p className="text-xs text-gray-400 mt-2">
               {TEAM_COLORS[selectedColor].name}
             </p>
+          </div>
+
+          <div>
+            <label htmlFor="defaultLocation" className="block text-sm font-medium text-gray-700 mb-1">
+              מיקום אימון קבוע (אופציונלי)
+            </label>
+            <input
+              id="defaultLocation"
+              type="text"
+              value={defaultLocation}
+              onChange={(e) => setDefaultLocation(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              placeholder='לדוגמה: אולם הספורט העירוני'
+            />
+            <p className="text-xs text-gray-400 mt-1">ימולא אוטומטית ביצירת אימון חדש</p>
           </div>
 
           {error && (

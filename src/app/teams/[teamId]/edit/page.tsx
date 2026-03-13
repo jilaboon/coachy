@@ -16,6 +16,7 @@ export default function EditTeamPage() {
   const [name, setName] = useState('');
   const [ageGroup, setAgeGroup] = useState('');
   const [selectedColor, setSelectedColor] = useState<{ name: string; hex: string }>(TEAM_COLORS[0]);
+  const [defaultLocation, setDefaultLocation] = useState('');
 
   useEffect(() => {
     loadTeam();
@@ -36,6 +37,7 @@ export default function EditTeamPage() {
 
     setName(team.name);
     setAgeGroup(team.age_group);
+    setDefaultLocation((team as Team & { default_location?: string | null }).default_location || '');
     const found = TEAM_COLORS.find((c) => c.hex === team.theme_color_hex);
     if (found) setSelectedColor(found);
     setLoading(false);
@@ -52,6 +54,7 @@ export default function EditTeamPage() {
         age_group: ageGroup.trim(),
         theme_color_name: selectedColor.name,
         theme_color_hex: selectedColor.hex,
+        default_location: defaultLocation.trim() || null,
       })
       .eq('id', teamId);
 
@@ -138,6 +141,20 @@ export default function EditTeamPage() {
               ))}
             </div>
             <p className="text-xs text-gray-400 mt-1">{selectedColor.name}</p>
+          </div>
+
+          {/* Default Location */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">מיקום אימון קבוע (אופציונלי)</label>
+            <input
+              type="text"
+              value={defaultLocation}
+              onChange={(e) => setDefaultLocation(e.target.value)}
+              placeholder="לדוגמה: אולם הספורט העירוני"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+              style={{ '--tw-ring-color': selectedColor.hex } as React.CSSProperties}
+            />
+            <p className="text-xs text-gray-400 mt-1">ימולא אוטומטית ביצירת אימון חדש</p>
           </div>
 
           {/* Submit */}

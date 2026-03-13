@@ -39,6 +39,9 @@ export default function NewPracticePage() {
       return;
     }
     setTeam(teamData);
+    if ((teamData as Team & { default_location?: string | null }).default_location) {
+      setLocation((teamData as Team & { default_location?: string | null }).default_location!);
+    }
     setLoading(false);
   }
 
@@ -55,7 +58,7 @@ export default function NewPracticePage() {
         practice_date: practiceDate,
         start_time: startTime,
         end_time: endTime || null,
-        location: location.trim(),
+        location: location.trim() || null,
         notes: notes.trim() || null,
         status: 'upcoming',
       })
@@ -186,10 +189,9 @@ export default function NewPracticePage() {
 
           {/* Location */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">מיקום</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">מיקום (אופציונלי)</label>
             <input
               type="text"
-              required
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="לדוגמה: אולם הספורט העירוני"
@@ -213,7 +215,7 @@ export default function NewPracticePage() {
           {/* Submit */}
           <button
             type="submit"
-            disabled={saving || !title.trim() || !practiceDate || !startTime || !location.trim()}
+            disabled={saving || !title.trim() || !practiceDate || !startTime}
             className="w-full py-3 rounded-xl text-white font-medium disabled:opacity-50"
             style={{ backgroundColor: color }}
           >
