@@ -6,6 +6,7 @@ interface AttendanceReportProps {
   players: Player[];
   attendanceMap: Record<string, boolean>;
   teamName: string;
+  coachName: string;
   practiceTitle: string;
   practiceDate: string;
   teamColor: string;
@@ -15,6 +16,7 @@ export default function AttendanceReport({
   players,
   attendanceMap,
   teamName,
+  coachName,
   practiceTitle,
   practiceDate,
   teamColor,
@@ -26,6 +28,7 @@ export default function AttendanceReport({
   function buildWhatsAppText() {
     let text = `📋 דוח נוכחות — ${teamName}\n`;
     text += `${practiceTitle} | ${practiceDate}\n`;
+    if (coachName) text += `מאמן: ${coachName}\n`;
     text += `━━━━━━━━━━━━━━━━━━\n\n`;
 
     if (attended.length > 0) {
@@ -85,6 +88,7 @@ export default function AttendanceReport({
         >
           <p className="text-sm font-bold">{teamName}</p>
           <p className="text-xs text-white/80 mt-0.5">{practiceTitle} — {practiceDate}</p>
+          {coachName && <p className="text-xs text-white/70 mt-0.5">מאמן: {coachName}</p>}
         </div>
 
         {/* Attended Players */}

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase-server';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
-import type { Practice, Team, Player, Invitation, Attendance, ResponseStatus } from '@/types/database';
+import type { Practice, Team, Player, Invitation, Attendance, Coach, ResponseStatus } from '@/types/database';
 import ShareButtons from '@/components/ShareButtons';
 import AttendanceReport from './AttendanceReport';
 
@@ -61,6 +61,13 @@ export default async function PracticeDashboard({
     .single<Team>();
 
   if (!team || team.coach_id !== user.id) notFound();
+
+  // Fetch coach name
+  const { data: coach } = await supabase
+    .from('coaches')
+    .select('full_name')
+    .eq('id', user.id)
+    .single<Pick<Coach, 'full_name'>>();
 
   // Fetch players
   const { data: players } = await supabase
@@ -313,6 +320,7 @@ export default async function PracticeDashboard({
             players={players}
             attendanceMap={Object.fromEntries(attendanceMap)}
             teamName={team.name}
+            coachName={coach?.full_name || ''}
             practiceTitle={practice.title}
             practiceDate={formattedDate}
             teamColor={team.theme_color_hex}
