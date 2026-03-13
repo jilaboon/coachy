@@ -13,6 +13,7 @@ export interface Team {
   theme_color_name: string;
   theme_color_hex: string;
   default_location: string | null;
+  logo_url: string | null;
   created_at: string;
 }
 

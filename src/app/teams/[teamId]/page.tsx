@@ -72,8 +72,17 @@ export default async function TeamPage({ params }: { params: Promise<{ teamId: s
             </svg>
             חזרה לדשבורד
           </Link>
-          <h1 className="text-2xl font-bold">{team.name}</h1>
-          <p className="text-white/75 text-sm mt-1">{team.age_group}</p>
+          <div className="flex items-center gap-3">
+            {team.logo_url && (
+              <div className="w-14 h-14 rounded-xl overflow-hidden bg-white/20 backdrop-blur-sm shrink-0 border border-white/30">
+                <img src={team.logo_url} alt={team.name} className="w-full h-full object-contain" />
+              </div>
+            )}
+            <div>
+              <h1 className="text-2xl font-bold">{team.name}</h1>
+              <p className="text-white/75 text-sm mt-1">{team.age_group}</p>
+            </div>
+          </div>
         </div>
       </div>
 

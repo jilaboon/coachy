@@ -12,8 +12,21 @@ export default function NewTeamPage() {
   const [ageGroup, setAgeGroup] = useState('');
   const [selectedColor, setSelectedColor] = useState<number>(0);
   const [defaultLocation, setDefaultLocation] = useState('');
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  function handleLogoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setError('הקובץ גדול מדי. מקסימום 5MB');
+      return;
+    }
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -60,6 +73,27 @@ export default function NewTeamPage() {
       return;
     }
 
+    // Upload logo if selected
+    if (logoFile) {
+      const ext = logoFile.name.split('.').pop() || 'png';
+      const path = `${data.id}/logo.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('team-logos')
+        .upload(path, logoFile, { upsert: true });
+
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage
+          .from('team-logos')
+          .getPublicUrl(path);
+
+        await supabase
+          .from('teams')
+          .update({ logo_url: urlData.publicUrl })
+          .eq('id', data.id);
+      }
+    }
+
     router.push(`/teams/${data.id}`);
   }
 
@@ -84,6 +118,49 @@ export default function NewTeamPage() {
           onSubmit={handleSubmit}
           className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-6"
         >
+          {/* Team Logo */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-3">
+              לוגו הקבוצה
+              <span className="font-normal text-gray-400 mr-1">(אופציונלי)</span>
+            </label>
+            <div className="flex items-center gap-4">
+              <div
+                className="w-20 h-20 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden bg-gray-50 shrink-0"
+                style={logoPreview ? { borderStyle: 'solid', borderColor: TEAM_COLORS[selectedColor].hex } : {}}
+              >
+                {logoPreview ? (
+                  <img
+                    src={logoPreview}
+                    alt="לוגו הקבוצה"
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+                  </svg>
+                )}
+              </div>
+              <div className="flex-1">
+                <label
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-gray-300 text-sm font-medium text-gray-700 cursor-pointer transition-all duration-200 hover:bg-gray-100 active:scale-[0.97]"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                  </svg>
+                  {logoPreview ? 'החלף לוגו' : 'העלה לוגו'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoSelect}
+                    className="hidden"
+                  />
+                </label>
+                <p className="text-xs text-gray-400 mt-1.5">PNG, JPG או WebP. עד 5MB</p>
+              </div>
+            </div>
+          </div>
+
           {/* Team Name */}
           <div>
             <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">

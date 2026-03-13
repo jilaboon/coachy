@@ -60,6 +60,19 @@ export default async function DashboardPage() {
                     style={{ backgroundColor: team.theme_color_hex }}
                   />
                   <div className="flex items-center gap-3 px-4 py-4 flex-1 min-w-0">
+                    {/* Team logo or fallback */}
+                    {team.logo_url ? (
+                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-gray-50 shrink-0 border border-gray-100">
+                        <img src={team.logo_url} alt={team.name} className="w-full h-full object-contain" />
+                      </div>
+                    ) : (
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-lg shrink-0 shadow-sm"
+                        style={{ backgroundColor: team.theme_color_hex }}
+                      >
+                        🏀
+                      </div>
+                    )}
                     <div className="min-w-0 flex-1">
                       <h2 className="font-bold text-base text-gray-900 truncate">{team.name}</h2>
                       <p className="text-sm text-gray-500 mt-0.5">{team.age_group}</p>
