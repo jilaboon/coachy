@@ -244,16 +244,17 @@ export default function AttendancePage() {
               <button
                 type="button"
                 role="switch"
+                dir="ltr"
                 aria-checked={attended}
                 onClick={() => toggleAttendance(player.id)}
-                className={`relative inline-flex h-8 w-14 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none active:scale-[0.95] ${
+                className={`relative inline-flex h-8 w-14 shrink-0 cursor-pointer items-center rounded-full px-1 transition-colors duration-200 ease-in-out focus:outline-none active:scale-[0.95] ${
                   attended ? '' : 'bg-slate-200'
                 }`}
                 style={attended ? { backgroundColor: team?.theme_color_hex } : undefined}
               >
                 <span
                   className={`pointer-events-none inline-block h-6 w-6 rounded-full bg-white shadow-md ring-0 transition-transform duration-200 ease-in-out ${
-                    attended ? 'translate-x-1.5' : 'translate-x-6.5'
+                    attended ? 'translate-x-6' : 'translate-x-0'
                   }`}
                 />
               </button>
