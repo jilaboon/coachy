@@ -26,6 +26,7 @@ interface PlayerData {
   id: string;
   full_name: string;
   jersey_number: number | null;
+  phone: string | null;
 }
 
 interface InvitationData {
@@ -36,6 +37,7 @@ interface InvitationData {
 interface StoredPlayer {
   playerId: string;
   playerName: string;
+  detailsConfirmed: boolean;
 }
 
 const RESPONSE_OPTIONS: { status: ResponseStatus; label: string; emoji: string; bg: string; activeBg: string }[] = [
@@ -76,6 +78,8 @@ function formatTime(timeStr: string): string {
   return timeStr.slice(0, 5);
 }
 
+type PageStep = 'select' | 'details' | 'respond';
+
 export default function PublicPracticePage({
   params,
 }: {
@@ -93,6 +97,12 @@ export default function PublicPracticePage({
   const [currentStatus, setCurrentStatus] = useState<ResponseStatus>('no_response');
   const [confirmed, setConfirmed] = useState(false);
   const [isPast, setIsPast] = useState(false);
+  const [step, setStep] = useState<PageStep>('select');
+
+  // Detail editing fields
+  const [editPhone, setEditPhone] = useState('');
+  const [editJersey, setEditJersey] = useState('');
+  const [savingDetails, setSavingDetails] = useState(false);
 
   // Resolve params
   useEffect(() => {
@@ -140,10 +150,21 @@ export default function PublicPracticePage({
     if (stored) {
       try {
         const parsed: StoredPlayer = JSON.parse(stored);
-        // Verify player still exists in the team
         const playerExists = (result.players ?? []).some((p) => p.id === parsed.playerId);
         if (playerExists) {
           setSelectedPlayer(parsed);
+          // If details were already confirmed, go straight to respond
+          if (parsed.detailsConfirmed) {
+            setStep('respond');
+          } else {
+            // Show details screen
+            const playerData = (result.players ?? []).find((p) => p.id === parsed.playerId);
+            if (playerData) {
+              setEditPhone(playerData.phone || '');
+              setEditJersey(playerData.jersey_number?.toString() || '');
+            }
+            setStep('details');
+          }
           // Check current response status
           const inv = (result.invitations ?? []).find((i) => i.player_id === parsed.playerId);
           if (inv && inv.response_status !== 'no_response') {
@@ -152,10 +173,14 @@ export default function PublicPracticePage({
           }
         } else {
           localStorage.removeItem(storageKey);
+          setStep('select');
         }
       } catch {
         localStorage.removeItem(storageKey);
+        setStep('select');
       }
+    } else {
+      setStep('select');
     }
 
     setLoading(false);
@@ -169,9 +194,11 @@ export default function PublicPracticePage({
 
   const handleSelectPlayer = (player: PlayerData) => {
     if (!team) return;
-    const stored: StoredPlayer = { playerId: player.id, playerName: player.full_name };
+    const stored: StoredPlayer = { playerId: player.id, playerName: player.full_name, detailsConfirmed: false };
     localStorage.setItem(`coachy_player_${team.id}`, JSON.stringify(stored));
     setSelectedPlayer(stored);
+    setEditPhone(player.phone || '');
+    setEditJersey(player.jersey_number?.toString() || '');
 
     // Check if player already responded
     const inv = invitations.find((i) => i.player_id === player.id);
@@ -182,6 +209,48 @@ export default function PublicPracticePage({
       setCurrentStatus('no_response');
       setConfirmed(false);
     }
+
+    setStep('details');
+  };
+
+  const handleSaveDetails = async () => {
+    if (!selectedPlayer || !team) return;
+    setSavingDetails(true);
+
+    const supabase = createClient();
+    const { error: rpcError } = await supabase.rpc('update_player_details', {
+      p_player_id: selectedPlayer.playerId,
+      p_phone: editPhone.trim() || null,
+      p_jersey_number: editJersey ? parseInt(editJersey) : null,
+    });
+
+    setSavingDetails(false);
+
+    if (!rpcError) {
+      // Mark details as confirmed in localStorage
+      const updated: StoredPlayer = { ...selectedPlayer, detailsConfirmed: true };
+      localStorage.setItem(`coachy_player_${team.id}`, JSON.stringify(updated));
+      setSelectedPlayer(updated);
+
+      // Update local player data
+      setPlayers((prev) =>
+        prev.map((p) =>
+          p.id === selectedPlayer.playerId
+            ? { ...p, phone: editPhone.trim() || null, jersey_number: editJersey ? parseInt(editJersey) : null }
+            : p
+        )
+      );
+
+      setStep('respond');
+    }
+  };
+
+  const handleSkipDetails = () => {
+    if (!selectedPlayer || !team) return;
+    const updated: StoredPlayer = { ...selectedPlayer, detailsConfirmed: true };
+    localStorage.setItem(`coachy_player_${team.id}`, JSON.stringify(updated));
+    setSelectedPlayer(updated);
+    setStep('respond');
   };
 
   const handleClearPlayer = () => {
@@ -190,6 +259,7 @@ export default function PublicPracticePage({
     setSelectedPlayer(null);
     setCurrentStatus('no_response');
     setConfirmed(false);
+    setStep('select');
   };
 
   const handleResponse = async (status: ResponseStatus) => {
@@ -209,7 +279,6 @@ export default function PublicPracticePage({
 
     if (!rpcError && data?.success) {
       setConfirmed(true);
-      // Update local invitations state
       setInvitations((prev) => {
         const existing = prev.findIndex((i) => i.player_id === selectedPlayer.playerId);
         if (existing >= 0) {
@@ -292,9 +361,128 @@ export default function PublicPracticePage({
           </div>
         </div>
 
-        {/* Player Identification / Response Section */}
-        {selectedPlayer ? (
-          /* Identified player — show greeting and response buttons */
+        {/* STEP: Player Selection */}
+        {step === 'select' && (
+          <div className="mt-6 rounded-2xl bg-white p-6 shadow-lg">
+            <p className="mb-4 text-center text-xl font-bold text-gray-900">
+              מי אתה? 🏀
+            </p>
+            <p className="mb-6 text-center text-sm text-gray-500">
+              בחר את השם שלך מהרשימה
+            </p>
+
+            <div className="flex flex-col gap-2">
+              {players.map((player) => {
+                const inv = invitations.find((i) => i.player_id === player.id);
+                const responded = inv && inv.response_status !== 'no_response';
+                return (
+                  <button
+                    key={player.id}
+                    onClick={() => handleSelectPlayer(player)}
+                    className="flex items-center gap-3 rounded-xl border-2 border-gray-100 bg-gray-50 px-4 py-4 text-right transition-all hover:border-gray-300 hover:bg-white active:scale-[0.98]"
+                  >
+                    {player.jersey_number !== null ? (
+                      <span
+                        className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                        style={{ backgroundColor: teamColor }}
+                      >
+                        {player.jersey_number}
+                      </span>
+                    ) : (
+                      <span
+                        className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-lg text-white"
+                        style={{ backgroundColor: teamColor }}
+                      >
+                        🏀
+                      </span>
+                    )}
+                    <span className="flex-1 text-lg font-medium text-gray-900">
+                      {player.full_name}
+                    </span>
+                    {responded && (
+                      <span className="text-xs text-gray-400">
+                        {inv.response_status === 'yes' && '✅'}
+                        {inv.response_status === 'no' && '❌'}
+                        {inv.response_status === 'maybe' && '🤔'}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* STEP: Details Confirmation */}
+        {step === 'details' && selectedPlayer && (
+          <div className="mt-6 rounded-2xl bg-white p-6 shadow-lg">
+            <p className="text-center text-xl font-bold text-gray-900">
+              שלום {selectedPlayer.playerName} 👋
+            </p>
+            <p className="mt-2 mb-6 text-center text-sm text-gray-500">
+              בדוק שהפרטים שלך נכונים
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  מספר טלפון
+                </label>
+                <input
+                  type="tel"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  placeholder="050-1234567"
+                  dir="ltr"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:border-transparent"
+                  style={{ '--tw-ring-color': teamColor } as React.CSSProperties}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  מספר חולצה
+                </label>
+                <input
+                  type="number"
+                  value={editJersey}
+                  onChange={(e) => setEditJersey(e.target.value)}
+                  placeholder="לדוגמה: 7"
+                  dir="ltr"
+                  min="0"
+                  max="99"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:border-transparent"
+                  style={{ '--tw-ring-color': teamColor } as React.CSSProperties}
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={handleSaveDetails}
+              disabled={savingDetails}
+              className="mt-6 w-full rounded-xl py-3 text-white font-medium text-sm disabled:opacity-50"
+              style={{ backgroundColor: teamColor }}
+            >
+              {savingDetails ? 'שומר...' : 'אישור והמשך'}
+            </button>
+
+            <button
+              onClick={handleSkipDetails}
+              className="mt-3 w-full text-center text-sm text-gray-400 underline"
+            >
+              דלג
+            </button>
+
+            <button
+              onClick={handleClearPlayer}
+              className="mt-2 w-full text-center text-xs text-gray-300"
+            >
+              לא אתה? לחץ כאן
+            </button>
+          </div>
+        )}
+
+        {/* STEP: Response */}
+        {step === 'respond' && selectedPlayer && (
           <div className="mt-6 rounded-2xl bg-white p-6 shadow-lg">
             <p className="text-center text-xl font-bold text-gray-900">
               שלום {selectedPlayer.playerName} 👋
@@ -355,56 +543,6 @@ export default function PublicPracticePage({
             >
               לא אתה? לחץ כאן
             </button>
-          </div>
-        ) : (
-          /* Player selection */
-          <div className="mt-6 rounded-2xl bg-white p-6 shadow-lg">
-            <p className="mb-4 text-center text-xl font-bold text-gray-900">
-              מי אתה? 🏀
-            </p>
-            <p className="mb-6 text-center text-sm text-gray-500">
-              בחר את השם שלך מהרשימה
-            </p>
-
-            <div className="flex flex-col gap-2">
-              {players.map((player) => {
-                const inv = invitations.find((i) => i.player_id === player.id);
-                const responded = inv && inv.response_status !== 'no_response';
-                return (
-                  <button
-                    key={player.id}
-                    onClick={() => handleSelectPlayer(player)}
-                    className="flex items-center gap-3 rounded-xl border-2 border-gray-100 bg-gray-50 px-4 py-4 text-right transition-all hover:border-gray-300 hover:bg-white active:scale-[0.98]"
-                  >
-                    {player.jersey_number !== null ? (
-                      <span
-                        className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-                        style={{ backgroundColor: teamColor }}
-                      >
-                        {player.jersey_number}
-                      </span>
-                    ) : (
-                      <span
-                        className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-lg text-white"
-                        style={{ backgroundColor: teamColor }}
-                      >
-                        🏀
-                      </span>
-                    )}
-                    <span className="flex-1 text-lg font-medium text-gray-900">
-                      {player.full_name}
-                    </span>
-                    {responded && (
-                      <span className="text-xs text-gray-400">
-                        {inv.response_status === 'yes' && '✅'}
-                        {inv.response_status === 'no' && '❌'}
-                        {inv.response_status === 'maybe' && '🤔'}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
           </div>
         )}
       </div>
