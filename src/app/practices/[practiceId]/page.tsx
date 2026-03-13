@@ -74,6 +74,7 @@ export default async function PracticeDashboard({
   (invitations ?? []).forEach((inv) => invitationMap.set(inv.player_id, inv));
 
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const practiceLink = `${BASE_URL}/p/${practiceId}`;
   const formattedDate = formatDate(practice.practice_date);
   const formattedTime = formatTime(practice.start_time);
 
@@ -144,6 +145,17 @@ export default async function PracticeDashboard({
           </div>
         </div>
 
+        {/* Share Buttons */}
+        <div className="mt-4">
+          <ShareButtons
+            practiceLink={practiceLink}
+            teamName={team.name}
+            date={formattedDate}
+            time={formattedTime}
+            location={practice.location}
+          />
+        </div>
+
         {/* Action Buttons */}
         <div className="mt-4 flex gap-3">
           <Link
@@ -186,15 +198,10 @@ export default async function PracticeDashboard({
               </h2>
               <div className="space-y-2">
                 {group.map((player) => {
-                  const inv = player.invitation;
-                  const inviteUrl = inv
-                    ? `${BASE_URL}/invite/${inv.token}`
-                    : '';
-
                   return (
                     <div
                       key={player.id}
-                      className="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm"
+                      className="flex items-center rounded-xl bg-white p-4 shadow-sm"
                     >
                       <div className="flex items-center gap-3">
                         {player.jersey_number !== null && (
@@ -214,15 +221,6 @@ export default async function PracticeDashboard({
                           </span>
                         </div>
                       </div>
-                      {inv && (
-                        <ShareButtons
-                          playerName={player.full_name}
-                          teamName={team.name}
-                          date={formattedDate}
-                          time={formattedTime}
-                          inviteUrl={inviteUrl}
-                        />
-                      )}
                     </div>
                   );
                 })}
