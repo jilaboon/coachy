@@ -5,20 +5,19 @@ import { createClient } from '@/lib/supabase-browser';
 import type { ResponseStatus } from '@/types/database';
 
 interface InviteResponseProps {
-  invitationId: string;
+  token: string;
   currentStatus: ResponseStatus;
   isPast: boolean;
   teamColor: string;
 }
 
-const RESPONSE_OPTIONS: { status: ResponseStatus; label: string; emoji: string; bg: string; activeBg: string; ring: string }[] = [
+const RESPONSE_OPTIONS: { status: ResponseStatus; label: string; emoji: string; bg: string; activeBg: string }[] = [
   {
     status: 'yes',
     label: 'מגיע',
     emoji: '✅',
     bg: 'bg-green-50 text-green-700 border-green-200',
     activeBg: 'bg-green-500 text-white border-green-500 shadow-lg shadow-green-200',
-    ring: 'ring-green-300',
   },
   {
     status: 'no',
@@ -26,7 +25,6 @@ const RESPONSE_OPTIONS: { status: ResponseStatus; label: string; emoji: string; 
     emoji: '❌',
     bg: 'bg-red-50 text-red-700 border-red-200',
     activeBg: 'bg-red-500 text-white border-red-500 shadow-lg shadow-red-200',
-    ring: 'ring-red-300',
   },
   {
     status: 'maybe',
@@ -34,12 +32,11 @@ const RESPONSE_OPTIONS: { status: ResponseStatus; label: string; emoji: string; 
     emoji: '🤔',
     bg: 'bg-yellow-50 text-yellow-700 border-yellow-200',
     activeBg: 'bg-yellow-500 text-white border-yellow-500 shadow-lg shadow-yellow-200',
-    ring: 'ring-yellow-300',
   },
 ];
 
 export default function InviteResponse({
-  invitationId,
+  token,
   currentStatus,
   isPast,
   teamColor,
@@ -55,17 +52,14 @@ export default function InviteResponse({
     setSelected(status);
 
     const supabase = createClient();
-    const { error } = await supabase
-      .from('invitations')
-      .update({
-        response_status: status,
-        responded_at: new Date().toISOString(),
-      })
-      .eq('id', invitationId);
+    const { data, error } = await supabase.rpc('respond_to_invite', {
+      invite_token: token,
+      new_status: status,
+    });
 
     setSubmitting(false);
 
-    if (!error) {
+    if (!error && data?.success) {
       setConfirmed(true);
     }
   };

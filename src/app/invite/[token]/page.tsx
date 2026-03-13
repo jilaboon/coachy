@@ -1,6 +1,4 @@
 import { createClient } from '@/lib/supabase-server';
-import { notFound } from 'next/navigation';
-import type { Invitation, Practice, Team, Player } from '@/types/database';
 import InviteResponse from './InviteResponse';
 
 function formatDate(dateStr: string): string {
@@ -25,14 +23,12 @@ export default async function InvitePage({
   const { token } = await params;
   const supabase = await createClient();
 
-  // Look up invitation
-  const { data: invitation, error: invError } = await supabase
-    .from('invitations')
-    .select('*')
-    .eq('token', token)
-    .single<Invitation>();
+  // Use RPC to fetch all invite data (bypasses RLS)
+  const { data, error } = await supabase.rpc('get_invite_data', {
+    invite_token: token,
+  });
 
-  if (invError || !invitation) {
+  if (error || !data) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
         <div className="text-center">
@@ -48,38 +44,15 @@ export default async function InvitePage({
     );
   }
 
-  // Update last_opened_at
-  await supabase
-    .from('invitations')
-    .update({ last_opened_at: new Date().toISOString() })
-    .eq('id', invitation.id);
+  const { invitation, player, practice, team } = data as {
+    invitation: { id: string; response_status: string; token: string };
+    player: { full_name: string };
+    practice: { title: string; practice_date: string; start_time: string; end_time: string | null; location: string };
+    team: { id: string; name: string; theme_color_name: string; theme_color_hex: string };
+  };
 
-  // Fetch practice
-  const { data: practice } = await supabase
-    .from('practices')
-    .select('*')
-    .eq('id', invitation.practice_id)
-    .single<Practice>();
-
-  if (!practice) notFound();
-
-  // Fetch team
-  const { data: team } = await supabase
-    .from('teams')
-    .select('*')
-    .eq('id', practice.team_id)
-    .single<Team>();
-
-  if (!team) notFound();
-
-  // Fetch player
-  const { data: player } = await supabase
-    .from('players')
-    .select('*')
-    .eq('id', invitation.player_id)
-    .single<Player>();
-
-  if (!player) notFound();
+  // Mark as opened
+  await supabase.rpc('mark_invite_opened', { invite_token: token });
 
   // Check if practice start time has passed
   const practiceDateTime = new Date(`${practice.practice_date}T${practice.start_time}`);
@@ -131,8 +104,8 @@ export default async function InvitePage({
           </p>
 
           <InviteResponse
-            invitationId={invitation.id}
-            currentStatus={invitation.response_status}
+            token={token}
+            currentStatus={invitation.response_status as 'yes' | 'no' | 'maybe' | 'no_response'}
             isPast={isPast}
             teamColor={team.theme_color_hex}
           />
