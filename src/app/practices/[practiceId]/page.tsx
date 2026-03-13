@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase-server';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
-import type { Practice, Team, Player, Invitation, ResponseStatus } from '@/types/database';
+import type { Practice, Team, Player, Invitation, Attendance, ResponseStatus } from '@/types/database';
 import ShareButtons from '@/components/ShareButtons';
+import AttendanceReport from './AttendanceReport';
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr + 'T00:00:00');
@@ -76,6 +77,16 @@ export default async function PracticeDashboard({
     .select('*')
     .eq('practice_id', practiceId)
     .returns<Invitation[]>();
+
+  // Fetch attendance records
+  const { data: attendanceRecords } = await supabase
+    .from('attendance')
+    .select('*')
+    .eq('practice_id', practiceId)
+    .returns<Attendance[]>();
+
+  const attendanceMap = new Map<string, boolean>();
+  (attendanceRecords ?? []).forEach((a) => attendanceMap.set(a.player_id, a.actual_attended));
 
   const invitationMap = new Map<string, Invitation>();
   (invitations ?? []).forEach((inv) => invitationMap.set(inv.player_id, inv));
@@ -295,6 +306,18 @@ export default async function PracticeDashboard({
             </div>
           );
         })}
+
+        {/* Attendance Report */}
+        {players && players.length > 0 && (
+          <AttendanceReport
+            players={players}
+            attendanceMap={Object.fromEntries(attendanceMap)}
+            teamName={team.name}
+            practiceTitle={practice.title}
+            practiceDate={formattedDate}
+            teamColor={team.theme_color_hex}
+          />
+        )}
 
         {/* Empty State */}
         {(!players || players.length === 0) && (
