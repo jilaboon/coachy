@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { Practice, Team, Player, Invitation, Attendance, Coach, ResponseStatus } from '@/types/database';
 import ShareButtons from '@/components/ShareButtons';
 import AttendanceReport from './AttendanceReport';
+import RefreshButton from './RefreshButton';
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr + 'T00:00:00');
@@ -135,7 +136,8 @@ export default async function PracticeDashboard({
         <div className="relative mx-auto max-w-lg">
           <Link
             href="/dashboard"
-            className="btn-ghost mb-4 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-all duration-200 hover:bg-white/25 active:scale-[0.97]"
+            className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-xs font-bold shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.97]"
+            style={{ color: team.theme_color_hex }}
           >
             <svg className="h-3.5 w-3.5 rotate-180" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
@@ -254,6 +256,11 @@ export default async function PracticeDashboard({
               </div>
             );
           })}
+        </div>
+
+        {/* Refresh Button */}
+        <div className="mt-4">
+          <RefreshButton teamColor={team.theme_color_hex} />
         </div>
 
         {/* Player Lists by Status */}
