@@ -4,14 +4,23 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Practice } from '@/types/database';
 
+interface ResponseCounts {
+  yes: number;
+  no: number;
+  maybe: number;
+  no_response: number;
+}
+
 export default function PracticeCard({
   practice,
   teamColor,
   index,
+  counts,
 }: {
   practice: Practice;
   teamColor: string;
   index: number;
+  counts: ResponseCounts | null;
 }) {
   const router = useRouter();
   const [navigating, setNavigating] = useState(false);
@@ -20,6 +29,9 @@ export default function PracticeCard({
     setNavigating(true);
     router.push(`/practices/${practice.id}`);
   }
+
+  const total = counts ? counts.yes + counts.no + counts.maybe + counts.no_response : 0;
+  const hasCounts = counts && total > 0;
 
   return (
     <button
@@ -58,6 +70,30 @@ export default function PracticeCard({
                   </span>
                 )}
               </div>
+
+              {/* Response distribution */}
+              {hasCounts && (
+                <div className="flex items-center gap-2 mt-2.5">
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <span className="inline-flex items-center gap-0.5 text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-semibold">
+                      ✅ {counts.yes}
+                    </span>
+                    <span className="inline-flex items-center gap-0.5 text-red-700 bg-red-50 px-1.5 py-0.5 rounded font-semibold">
+                      ❌ {counts.no}
+                    </span>
+                    {counts.maybe > 0 && (
+                      <span className="inline-flex items-center gap-0.5 text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded font-semibold">
+                        🤔 {counts.maybe}
+                      </span>
+                    )}
+                    {counts.no_response > 0 && (
+                      <span className="inline-flex items-center gap-0.5 text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded font-medium">
+                        ⏳ {counts.no_response}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
             {navigating ? (
               <svg className="w-5 h-5 animate-spin text-gray-400 shrink-0 mt-1" fill="none" viewBox="0 0 24 24">

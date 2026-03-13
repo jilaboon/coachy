@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase-server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import type { Team, Player, Practice } from '@/types/database';
+import type { Team, Player, Practice, Invitation } from '@/types/database';
 import PracticeCard from './PracticeCard';
 
 export default async function TeamPage({ params }: { params: Promise<{ teamId: string }> }) {
@@ -38,6 +38,25 @@ export default async function TeamPage({ params }: { params: Promise<{ teamId: s
     .order('practice_date', { ascending: true })
     .limit(10)
     .returns<Practice[]>();
+
+  // Fetch invitation counts for upcoming practices
+  const upcomingIds = (upcomingPractices ?? []).map((p) => p.id);
+  const { data: invitations } = upcomingIds.length > 0
+    ? await supabase
+        .from('invitations')
+        .select('practice_id, response_status')
+        .in('practice_id', upcomingIds)
+        .returns<Pick<Invitation, 'practice_id' | 'response_status'>[]>()
+    : { data: [] as Pick<Invitation, 'practice_id' | 'response_status'>[] };
+
+  // Aggregate counts per practice
+  const responseCounts: Record<string, { yes: number; no: number; maybe: number; no_response: number }> = {};
+  (invitations ?? []).forEach((inv) => {
+    if (!responseCounts[inv.practice_id]) {
+      responseCounts[inv.practice_id] = { yes: 0, no: 0, maybe: 0, no_response: 0 };
+    }
+    responseCounts[inv.practice_id][inv.response_status]++;
+  });
 
   const { data: pastPractices } = await supabase
     .from('practices')
@@ -134,6 +153,7 @@ export default async function TeamPage({ params }: { params: Promise<{ teamId: s
                   practice={practice}
                   teamColor={team.theme_color_hex}
                   index={index}
+                  counts={responseCounts[practice.id] || null}
                 />
               ))}
             </div>
